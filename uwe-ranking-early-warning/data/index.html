@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UWE Bristol Ranking Early Warning System</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>UK University Ranking Early Warning System</h1>
+  <p>A machine learning dashboard predicting institutional rank, explaining the drivers behind ranking changes, and flagging universities at risk of decline before published rankings reflect it. Case study: UWE Bristol, 2022&ndash;2027.</p>
+  <div class="badge-row">
+    <span class="badge">130 UK institutions</span>
+    <span class="badge">6 years of CUG data (2022&ndash;2027)</span>
+    <span class="badge">649 observations</span>
+    <span class="badge">Random Forest &amp; XGBoost</span>
+    <span class="badge">SHAP explainability</span>
+  </div>
+</header>
+
+<nav id="nav">
+  <button class="active" data-target="overview">Overview</button>
+  <button data-target="models">Model performance</button>
+  <button data-target="uwe">UWE Bristol case study</button>
+  <button data-target="shap">SHAP explainability</button>
+  <button data-target="warning">Early warning system</button>
+  <button data-target="about">About this project</button>
+</nav>
+
+<main>
+
+  <!-- OVERVIEW -->
+  <section id="overview" class="active">
+    <h2 class="section-title">Project overview</h2>
+    <p class="intro-text">UWE Bristol's Guardian University Guide ranking climbed from 64th to 24th place between 2011 and 2023, then fell back to 64th by 2025 &mdash; a loss of 40 places in two years. This project investigates whether such a decline could have been predicted in advance using institutional performance data.</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="label">Best model MAE</div>
+        <div class="value">2.93</div>
+        <div class="sub">rank positions (XGBoost), vs 5.99 for naive baseline</div>
+      </div>
+      <div class="card">
+        <div class="label">Error reduction</div>
+        <div class="value">51%</div>
+        <div class="sub">vs. predicting "no change" from last year</div>
+      </div>
+      <div class="card">
+        <div class="label">UWE 2026 prediction error</div>
+        <div class="value">0.6</div>
+        <div class="sub">rank positions (predicted 61.4, actual 62)</div>
+      </div>
+      <div class="card">
+        <div class="label">Early warning (2024 &rarr; 2025)</div>
+        <div class="value" style="color:var(--red)">At risk</div>
+        <div class="sub">Correctly flagged one year in advance</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">UWE Bristol ranking trajectory (CUG, 2022&ndash;2027)</h2>
+    <div class="chart-wrap">
+      <canvas id="trajChart" role="img" aria-label="Line chart showing UWE Bristol's CUG rank from 2022 to 2027, falling from 55 to 75 then partially recovering to 62 and falling again to 73"></canvas>
+    </div>
+
+    <div class="finding-box">
+      <strong>Key finding:</strong> the sharpest single-year decline occurred between 2024 and 2025, when student satisfaction dropped 0.86 points (on CUG's 1&ndash;4 scale) and the staff-student ratio worsened from 15.7 to 16.8. Using only 2024 data, the volatility classifier correctly predicted that UWE Bristol would be classified "at risk" in 2025 &mdash; before this decline appeared in any published league table.
+    </div>
+  </section>
+
+  <!-- MODEL PERFORMANCE -->
+  <section id="models">
+    <h2 class="section-title">Regression model comparison</h2>
+    <p class="intro-text">Three models were trained to predict institutional rank, using a temporal split: 2022&ndash;2024 for training (271 rows), 2025&ndash;2027 for testing (378 rows). This reflects realistic forecasting &mdash; the model only ever sees the past when predicting the future.</p>
+
+    <div class="chart-wrap" style="height:300px;">
+      <canvas id="maeChart" role="img" aria-label="Bar chart comparing mean absolute error across four models: naive baseline 5.99, Ridge Regression 0.00, Random Forest 2.95, XGBoost 2.93"></canvas>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Model</th><th>MAE (rank positions)</th><th>RMSE</th><th>R&sup2;</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Naive (previous year's rank)</td><td>5.99</td><td>8.81</td><td>0.945</td><td>Baseline &mdash; assumes no change</td></tr>
+        <tr><td>Ridge Regression</td><td>0.00</td><td>0.00</td><td>1.000</td><td>Overfit &mdash; exploits rank_lag1 correlation</td></tr>
+        <tr><td>Random Forest</td><td>2.95</td><td>4.27</td><td>0.987</td><td>100 trees, max depth 10</td></tr>
+        <tr><td><strong>XGBoost</strong></td><td><strong>2.93</strong></td><td><strong>4.01</strong></td><td><strong>0.989</strong></td><td>Best overall performance</td></tr>
+      </tbody>
+    </table>
+
+    <div class="finding-box">
+      <strong>Why Ridge shows 0.00 MAE:</strong> this is overfitting, not a genuinely superior model. Ridge exploits the near-perfect linear correlation between a university's rank last year and this year, which doesn't reflect real forecasting ability. Random Forest and XGBoost, which model this relationship as informative but not deterministic, are the project's primary models.
+    </div>
+
+    <h2 class="section-title">Top predictive features (global)</h2>
+    <p class="intro-text">Fourteen engineered features were used as inputs, combining raw CUG metrics with lagged values, year-on-year changes, and 3-year rolling averages.</p>
+    <div class="grid">
+      <div class="card"><div class="label">Feature</div><div class="value" style="font-size:1.1rem;">rank_lag1</div><div class="sub">Previous year's rank</div></div>
+      <div class="card"><div class="label">Feature</div><div class="value" style="font-size:1.1rem;">satisfaction</div><div class="sub">Current NSS-based score</div></div>
+      <div class="card"><div class="label">Feature</div><div class="value" style="font-size:1.1rem;">staff_ratio</div><div class="sub">Students per staff member</div></div>
+      <div class="card"><div class="label">Feature</div><div class="value" style="font-size:1.1rem;">satisfaction_change</div><div class="sub">Year-on-year change</div></div>
+    </div>
+    <p style="font-size:0.85rem; color:var(--text-secondary);">See the SHAP explainability tab for the full ranked importance chart (insert shap_global.png).</p>
+  </section>
+
+  <!-- UWE CASE STUDY -->
+  <section id="uwe">
+    <h2 class="section-title">UWE Bristol: predicted vs actual rank</h2>
+    <p class="intro-text">The Random Forest model's predictions for UWE Bristol were considerably more accurate than the overall test set average (MAE 2.95), with errors of 2.8, 0.6 and 0.3 rank positions across the three test years.</p>
+
+    <div class="chart-wrap">
+      <canvas id="uweChart" role="img" aria-label="Bar chart comparing UWE Bristol's predicted and actual CUG rank for 2025, 2026 and 2027"></canvas>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Year</th><th>Actual rank</th><th>Predicted rank</th><th>Absolute error</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2025</td><td>75</td><td>72.2</td><td>2.8</td></tr>
+        <tr><td>2026</td><td>62</td><td>61.4</td><td>0.6</td></tr>
+        <tr><td>2027</td><td>73</td><td>72.7</td><td>0.3</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="section-title">Full timeline and volatility classification</h2>
+    <table>
+      <thead>
+        <tr><th>Year</th><th>Rank</th><th>Change</th><th>Volatility label</th><th>Satisfaction</th><th>Satisfaction change</th><th>Staff ratio</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2022</td><td>55</td><td>&minus;9</td><td><span class="tag rising">rising</span></td><td>3.14</td><td>0.00</td><td>15.8</td></tr>
+        <tr><td>2023</td><td>61</td><td>+6</td><td><span class="tag stable">stable</span></td><td>3.90</td><td>+0.76</td><td>15.7</td></tr>
+        <tr><td>2024</td><td>67</td><td>+6</td><td><span class="tag stable">stable</span></td><td>3.90</td><td>0.00</td><td>16.8</td></tr>
+        <tr><td>2025</td><td>75</td><td>+8</td><td><span class="tag falling">falling</span></td><td>3.04</td><td>&minus;0.86</td><td>16.8</td></tr>
+        <tr><td>2026</td><td>62</td><td>&minus;13</td><td><span class="tag rising">rising</span></td><td>3.05</td><td>+0.01</td><td>15.8</td></tr>
+        <tr><td>2027</td><td>73</td><td>+11</td><td><span class="tag falling">falling</span></td><td>3.14</td><td>+0.09</td><td>16.1</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.6rem;">Note: CUG rank values differ numerically from the Guardian rankings (rank 24 &rarr; 64 between 2023&ndash;2025) referenced in the project report, as the two organisations use different methodologies. The same underlying pattern &mdash; a sharp satisfaction decline preceding a ranking fall &mdash; is visible in both.</p>
+  </section>
+
+  <!-- SHAP -->
+  <section id="shap">
+    <h2 class="section-title">SHAP explainability analysis</h2>
+    <p class="intro-text">SHAP (SHapley Additive exPlanations) decomposes each prediction into the contribution of each input feature, relative to the model's average prediction. This shows not just <em>which</em> metrics matter, but <em>why</em> the model made a specific prediction for a specific university in a specific year.</p>
+
+    <div class="two-col">
+      <div>
+        <div class="placeholder-img">Insert <code>shap_global.png</code><br>Global feature importance (bar chart)</div>
+      </div>
+      <div>
+        <div class="placeholder-img">Insert <code>shap_direction.png</code><br>SHAP direction / beeswarm plot</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">UWE Bristol: local explanations</h2>
+    <p class="intro-text">Waterfall plots showing exactly which features pushed each year's prediction up (worse rank) or down (better rank) relative to the baseline.</p>
+    <div class="placeholder-img">Insert <code>shap_uwe_2025.png</code><br>What drove the predicted rank of 72.2 for 2025?</div>
+    <div class="placeholder-img">Insert <code>shap_uwe_2026.png</code><br>What drove the predicted rank of 61.4 for 2026?</div>
+    <div class="placeholder-img">Insert <code>shap_uwe_2027.png</code><br>What drove the predicted rank of 72.7 for 2027?</div>
+  </section>
+
+  <!-- EARLY WARNING -->
+  <section id="warning">
+    <h2 class="section-title">Volatility classifier: at risk / stable / improving</h2>
+    <p class="intro-text">Rather than predicting an exact rank, this classifier predicts whether an institution will be "at risk", "stable" or "improving" in the following year &mdash; designed explicitly as an early warning signal for decision-makers.</p>
+
+    <div class="grid">
+      <div class="card"><div class="label">Overall accuracy</div><div class="value">64%</div><div class="sub">242 test observations (2025&ndash;2026)</div></div>
+      <div class="card"><div class="label">At-risk recall (baseline)</div><div class="value" style="color:var(--red);">0%</div><div class="sub">Before remediation</div></div>
+      <div class="card"><div class="label">At-risk recall (tuned)</div><div class="value" style="color:var(--amber-dark);">37%</div><div class="sub">After threshold tuning (0.20)</div></div>
+      <div class="card"><div class="label">UWE early warning accuracy</div><div class="value" style="color:var(--green);">4 / 5</div><div class="sub">Correct next-year predictions</div></div>
+    </div>
+
+    <div class="placeholder-img">Insert <code>confusion_matrix.png</code><br>Confusion matrix for the 3-category volatility classifier</div>
+
+    <h2 class="section-title">UWE Bristol: did the early warning system work?</h2>
+    <table>
+      <thead>
+        <tr><th>Year</th><th>Rank</th><th>Actual next-year category</th><th>Predicted next-year category</th><th>Result</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2022</td><td>55</td><td><span class="tag stable">stable</span></td><td><span class="tag stable">stable</span></td><td><span class="tag correct">correct</span></td></tr>
+        <tr><td>2023</td><td>61</td><td><span class="tag stable">stable</span></td><td><span class="tag stable">stable</span></td><td><span class="tag correct">correct</span></td></tr>
+        <tr><td>2024</td><td>67</td><td><span class="tag at_risk">at risk</span></td><td><span class="tag at_risk">at risk</span></td><td><span class="tag correct">correct</span></td></tr>
+        <tr><td>2025</td><td>75</td><td><span class="tag improving">improving</span></td><td><span class="tag improving">improving</span></td><td><span class="tag correct">correct</span></td></tr>
+        <tr><td>2026</td><td>62</td><td><span class="tag at_risk">at risk</span></td><td><span class="tag improving">improving</span></td><td><span class="tag incorrect">incorrect</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="finding-box">
+      <strong>Headline result:</strong> using only data available at the end of 2024 &mdash; before UWE Bristol's 2025 ranking decline appeared in any published league table &mdash; the classifier correctly predicted UWE would be "at risk" the following year. This result held consistently across the baseline, SMOTE, and threshold-tuned classifier variants.
+    </div>
+    <p style="font-size:0.85rem; color:var(--text-secondary);">The 2026 prediction was incorrect, which is discussed as a limitation: the overall classifier accuracy across all 130 institutions (64%, 37% at-risk recall after tuning) remains constrained by class imbalance &mdash; only 74 of 510 next-year labels are "at risk". This is identified as the primary direction for future work, requiring a longer time series (10+ years) to provide enough examples of decline events.</p>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <h2 class="section-title">About this project</h2>
+    <p class="intro-text">UFCEKP-30-3 Data Science and AI Individual Project &mdash; Mansora Akter Bithe (25036888), UWE Bristol.</p>
+
+    <h3 style="color:var(--navy); font-size:1.05rem; margin-bottom:0.5rem;">Data source</h3>
+    <p class="intro-text">Complete University Guide (CUG) league tables, 2022&ndash;2027, covering approximately 130 UK institutions per year. Selected over the Guardian University Guide because CUG provides consistent multi-year CSV downloads, enabling proper temporal train/test validation.</p>
+
+    <h3 style="color:var(--navy); font-size:1.05rem; margin-bottom:0.5rem;">Pipeline</h3>
+    <table>
+      <tbody>
+        <tr><td style="width:30%;">Raw data collected</td><td>910 university-year observations, 13 columns</td></tr>
+        <tr><td>After cleaning</td><td>910 rows, 14 standardised columns (column &amp; naming inconsistencies resolved)</td></tr>
+        <tr><td>After feature engineering</td><td>649 rows, 24 columns (lag, change, rolling-average features added)</td></tr>
+        <tr><td>Train / test split</td><td>2022&ndash;2024 (271 rows) / 2025&ndash;2027 (378 rows), split by year</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="color:var(--navy); font-size:1.05rem; margin:1rem 0 0.5rem;">Links</h3>
+    <p class="intro-text">
+      Full report (.docx): <em>[insert link]</em><br>
+      Google Colab notebook: <em>[insert link]</em><br>
+      Processed dataset (cug_clean.csv): <em>[insert link]</em>
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  Early Warning Detection of University Ranking Volatility &mdash; UFCEKP-30-3 resit project, 2026
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script>
+  // Navigation
+  const buttons = document.querySelectorAll('nav button');
+  const sections = document.querySelectorAll('main section');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      sections.forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.target).classList.add('active');
+    });
+  });
+
+  const navy = '#1F3864';
+  const amber = '#EF9F27';
+  const red = '#A32D2D';
+  const green = '#3B6D11';
+  const gray = '#9AA5B1';
+
+  // UWE trajectory chart
+  new Chart(document.getElementById('trajChart'), {
+    type: 'line',
+    data: {
+      labels: ['2022','2023','2024','2025','2026','2027'],
+      datasets: [{
+        label: 'UWE Bristol CUG rank',
+        data: [55, 61, 67, 75, 62, 73],
+        borderColor: navy,
+        backgroundColor: 'rgba(31,56,100,0.08)',
+        fill: true,
+        tension: 0.25,
+        pointRadius: 5,
+        pointBackgroundColor: ['#3B6D11','#1F3864','#1F3864','#A32D2D','#3B6D11','#EF9F27'],
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { reverse: true, title: { display: true, text: 'CUG rank (1 = best)' }, suggestedMin: 50, suggestedMax: 80 }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => 'Rank ' + ctx.parsed.y
+          }
+        }
+      }
+    }
+  });
+
+  // MAE comparison chart
+  new Chart(document.getElementById('maeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Naive baseline','Ridge Regression*','Random Forest','XGBoost'],
+      datasets: [{
+        label: 'MAE (rank positions)',
+        data: [5.99, 0.00, 2.95, 2.93],
+        backgroundColor: [gray, '#D8DEE6', navy, amber]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { title: { display: true, text: 'Mean Absolute Error (rank positions)' }, beginAtZero: true } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            afterLabel: (ctx) => ctx.dataIndex === 1 ? 'Overfit result — see note below' : ''
+          }
+        }
+      }
+    }
+  });
+
+  // UWE predicted vs actual
+  new Chart(document.getElementById('uweChart'), {
+    type: 'bar',
+    data: {
+      labels: ['2025','2026','2027'],
+      datasets: [
+        {
+          label: 'Actual rank',
+          data: [75, 62, 73],
+          backgroundColor: navy
+        },
+        {
+          label: 'Predicted rank',
+          data: [72.2, 61.4, 72.7],
+          backgroundColor: amber
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { reverse: true, title: { display: true, text: 'CUG rank (1 = best)' }, suggestedMin: 55, suggestedMax: 80 } },
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { boxWidth: 12 } }
+      }
+    }
+  });
+</script>
+</body>
+</html>

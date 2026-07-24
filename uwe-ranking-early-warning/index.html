@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UWE Bristol Early Warning System</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #0a0e1a 0%, #0f2340 50%, #1a1a2e 100%);
+  min-height: 100vh;
+  color: white;
+  padding: 20px;
+}
+
+.header {
+  text-align: center;
+  padding: 40px 20px 30px;
+}
+
+.header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 20px auto;
+  flex-wrap: wrap;
+}
+
+.stat-pill {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  color: #60a5fa;
+  backdrop-filter: blur(10px);
+}
+
+.stat-pill span { color: white; font-weight: 700; }
+
+.quick-load {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px auto;
+  flex-wrap: wrap;
+  max-width: 900px;
+}
+
+.qbtn {
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.qbtn-uwe {
+  background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05));
+  color: #fca5a5;
+  border-color: rgba(239,68,68,0.4);
+}
+
+.qbtn-strong {
+  background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.05));
+  color: #86efac;
+  border-color: rgba(34,197,94,0.4);
+}
+
+.qbtn-weak {
+  background: linear-gradient(135deg, rgba(249,115,22,0.2), rgba(249,115,22,0.05));
+  color: #fdba74;
+  border-color: rgba(249,115,22,0.4);
+}
+
+.qbtn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 1000px;
+  margin: 20px auto;
+}
+
+.glass-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #60a5fa;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(180deg, #60a5fa, #a78bfa);
+  border-radius: 2px;
+}
+
+.slider-group { margin-bottom: 16px; }
+
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.slider-val {
+  background: rgba(96,165,250,0.15);
+  color: #60a5fa;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 0.85rem;
+  min-width: 50px;
+  text-align: center;
+}
+
+input[type=range] {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(96,165,250,0.5);
+}
+
+.hint {
+  font-size: 0.68rem;
+  color: #475569;
+  margin-top: 3px;
+}
+
+.predict-btn {
+  display: block;
+  width: 100%;
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 18px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 30px rgba(59,130,246,0.4);
+  transition: all 0.3s;
+}
+
+.predict-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px rgba(59,130,246,0.6);
+}
+
+.result-section {
+  max-width: 1000px;
+  margin: 20px auto;
+  display: none;
+}
+
+.result-header {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.result-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.result-card .label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.result-card .value {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.result-card .sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.warning-box {
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  border: 1px solid;
+}
+
+.warning-box.at-risk {
+  background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+  border-color: rgba(239,68,68,0.4);
+}
+
+.warning-box.stable {
+  background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+  border-color: rgba(34,197,94,0.4);
+}
+
+.warning-box .icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+.warning-box .title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.at-risk .title { color: #f87171; }
+.stable .title { color: #4ade80; }
+
+.warning-box .desc {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.explainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.factor-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.factor-name {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.factor-bar-bg {
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  height: 6px;
+  margin: 6px 0;
+}
+
+.factor-bar {
+  height: 6px;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+
+.factor-val {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.how-it-works {
+  max-width: 1000px;
+  margin: 20px auto;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.step {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.step-num {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  margin: 0 auto 10px;
+}
+
+.step-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 6px;
+}
+
+.step-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.uwe-timeline {
+  max-width: 1000px;
+  margin: 20px auto;
+}
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: 60px 80px 100px 120px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+
+.timeline-header {
+  background: rgba(255,255,255,0.05);
+  color: #64748b;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.timeline-data { color: #e2e8f0; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.badge-risk { background: rgba(239,68,68,0.2); color: #f87171; }
+.badge-stable { background: rgba(148,163,184,0.2); color: #94a3b8; }
+.badge-rising { background: rgba(34,197,94,0.2); color: #4ade80; }
+.badge-falling { background: rgba(249,115,22,0.2); color: #fb923c; }
+
+.rank-bar-bg {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  height: 8px;
+  width: 100%;
+}
+
+.rank-bar {
+  height: 8px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎓 UWE Bristol Ranking Early Warning System</h1>
+  <p>Mansora Akter Bithe · 25036888 · UFCEKP-30-3 · UWE Bristol 2026</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-pill">Model: <span>LightGBM</span></div>
+  <div class="stat-pill">Training data: <span>13 years CUG</span></div>
+  <div class="stat-pill">Universities: <span>130 UK</span></div>
+  <div class="stat-pill">MAE: <span>1.76 rank positions</span></div>
+  <div class="stat-pill">Better than baseline: <span>71%</span></div>
+</div>
+
+<div class="quick-load">
+  <button class="qbtn qbtn-uwe" onclick="loadUWE()">⚠️ UWE Bristol 2024 — AT RISK expected</button>
+  <button class="qbtn qbtn-strong" onclick="loadStrong()">✓ Strong university — STABLE expected</button>
+  <button class="qbtn qbtn-weak" onclick="loadWeak()">📉 Declining university — AT RISK expected</button>
+</div>
+
+<div class="main-grid">
+  <div class="glass-card">
+    <div class="card-title">This Year's Metrics</div>
+
+    <div class="slider-group">
+      <div class="slider-label">Student Satisfaction <span class="slider-val" id="v_sat">3.90</span></div>
+      <input type="range" min="1" max="4" step="0.01" value="3.9" id="sat" oninput="document.getElementById('v_sat').textContent=parseFloat(this.value).toFixed(2)">
+      <div class="hint">Scale 1–4 · Higher = better · CUG survey score</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">Staff-Student Ratio <span class="slider-val" id="v_ratio">16.8</span></div>
+      <input type="range" min="5" max="40" step="0.1" value="16.8" id="ratio" oninput="document.getElementById('v_ratio').textContent=parseFloat(this.value).toFixed(1)">
+      <div class="hint">Students per academic staff · Lower = better</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">Graduate Prospects <span class="slider-val" id="v_career">80.0%</span></div>
+      <input type="range" min="50" max="100" step="0.1" value="80" id="career" oninput="document.getElementById('v_career').textContent=parseFloat(this.value).toFixed(1)+'%'">
+      <div class="hint">% in professional roles or further study after 15 months</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">Continuation Rate <span class="slider-val" id="v_cont">90.2%</span></div>
+      <input type="range" min="50" max="100" step="0.1" value="90.2" id="cont" oninput="document.getElementById('v_cont').textContent=parseFloat(this.value).toFixed(1)+'%'">
+      <div class="hint">% students continuing to year 2</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">Entry Standards (UCAS) <span class="slider-val" id="v_tariff">129</span></div>
+      <input type="range" min="80" max="300" step="1" value="129" id="tariff" oninput="document.getElementById('v_tariff').textContent=this.value">
+      <div class="hint">Average UCAS points of new entrants</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">Research Quality <span class="slider-val" id="v_rq">2.80</span></div>
+      <input type="range" min="1" max="4" step="0.01" value="2.8" id="rq" oninput="document.getElementById('v_rq').textContent=parseFloat(this.value).toFixed(2)">
+      <div class="hint">REF-derived research quality score 1–4</div>
+    </div>
+  </div>
+
+  <div class="glass-card">
+    <div class="card-title">Previous Year Metrics (for trend detection)</div>
+
+    <div class="slider-group">
+      <div class="slider-label">Last year's rank <span class="slider-val" id="v_lag">67</span></div>
+      <input type="range" min="1" max="130" step="1" value="67" id="lag" oninput="document.getElementById('v_lag').textContent=this.value">
+      <div class="hint">CUG rank 12 months ago · Used to detect trajectory</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">Last year's satisfaction <span class="slider-val" id="v_sat_lag">3.90</span></div>
+      <input type="range" min="1" max="4" step="0.01" value="3.9" id="sat_lag" oninput="document.getElementById('v_sat_lag').textContent=parseFloat(this.value).toFixed(2)">
+      <div class="hint">Satisfaction change is a key early warning signal</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">Last year's staff ratio <span class="slider-val" id="v_ratio_lag">15.7</span></div>
+      <input type="range" min="5" max="40" step="0.1" value="15.7" id="ratio_lag" oninput="document.getElementById('v_ratio_lag').textContent=parseFloat(this.value).toFixed(1)">
+      <div class="hint">Rising ratio = more students per teacher = warning signal</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">Last year's prospects <span class="slider-val" id="v_career_lag">80.0%</span></div>
+      <input type="range" min="50" max="100" step="0.1" value="80" id="career_lag" oninput="document.getElementById('v_career_lag').textContent=parseFloat(this.value).toFixed(1)+'%'">
+      <div class="hint">Falling graduate prospects predicts ranking decline</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">3-year average rank <span class="slider-val" id="v_avg">62</span></div>
+      <input type="range" min="1" max="130" step="1" value="62" id="avg" oninput="document.getElementById('v_avg').textContent=this.value">
+      <div class="hint">Strongest single predictor in SHAP analysis</div>
+    </div>
+
+    <div style="margin-top:20px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.15);border-radius:12px;padding:14px;">
+      <div style="font-size:0.75rem;color:#60a5fa;font-weight:700;margin-bottom:8px;">HOW THE MODEL WORKS</div>
+      <div style="font-size:0.72rem;color:#64748b;line-height:1.6;">
+        The model calculates <strong style="color:#94a3b8">change features</strong> automatically from current vs last year values.
+        It then uses <strong style="color:#94a3b8">16 features</strong> including lags, changes, and rolling averages
+        to detect patterns that historically precede ranking decline.
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="predict-btn" onclick="predict()">🔮 RUN EARLY WARNING PREDICTION</button>
+
+<div class="result-section" id="result-section">
+  <div class="result-header">Prediction Results</div>
+
+  <div class="result-grid">
+    <div class="result-card">
+      <div class="label">Predicted Next Rank</div>
+      <div class="value" id="r_rank">—</div>
+      <div class="sub" id="r_change">—</div>
+    </div>
+    <div class="result-card">
+      <div class="label">At-Risk Probability</div>
+      <div class="value" id="r_prob">—</div>
+      <div class="sub">Threshold: 25%</div>
+    </div>
+    <div class="result-card">
+      <div class="label">Decision Threshold</div>
+      <div class="value" style="font-size:1.2rem;padding-top:8px" id="r_threshold">—</div>
+      <div class="sub">Early warning system</div>
+    </div>
+  </div>
+
+  <div class="warning-box" id="warning-box">
+    <div class="icon" id="w_icon">—</div>
+    <div class="title" id="w_title">—</div>
+    <div class="desc" id="w_desc">—</div>
+  </div>
+
+  <div style="margin-top:20px">
+    <div class="card-title" style="padding:0 0 12px 0">Key Factors Influencing This Prediction</div>
+    <div class="explainer" id="explainer"></div>
+  </div>
+</div>
+
+<div class="how-it-works glass-card" style="margin-top:20px">
+  <div class="card-title">How the Early Warning System Works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-title">Collect Metrics</div>
+      <div class="step-desc">13 years of CUG data across 130 UK universities — satisfaction, staff ratio, prospects, continuation, entry standards</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">Engineer Features</div>
+      <div class="step-desc">Calculate lag features, year-on-year changes, and 3-year rolling averages to capture trajectory, not just current state</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-title">LightGBM Predicts</div>
+      <div class="step-desc">Gradient boosted trees trained on 2016–2024 data predict next year's rank with MAE 1.76 — 71% better than naive baseline</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-title">Early Warning</div>
+      <div class="step-desc">If at-risk probability exceeds 25% threshold, the system flags the institution — catching both UWE Bristol declines 1 year early</div>
+    </div>
+  </div>
+</div>
+
+<div class="uwe-timeline glass-card" style="margin-top:20px;margin-bottom:40px">
+  <div class="card-title">UWE Bristol Historical Timeline (2016–2027)</div>
+  <div class="timeline-row timeline-header">
+    <div>Year</div><div>Rank</div><div>Change</div><div>Status</div><div>Rank position</div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2016</div><div>62</div><div>+9</div><div><span class="badge badge-falling">Falling</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:52%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2017</div><div>67</div><div>+5</div><div><span class="badge badge-stable">Stable</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:56%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2018</div><div>60</div><div>-7</div><div><span class="badge badge-stable">Stable</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:50%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2019</div><div>58</div><div>-2</div><div><span class="badge badge-stable">Stable</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:48%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data" style="background:rgba(239,68,68,0.05)">
+    <div>2020</div><div>55</div><div>-3</div><div><span class="badge badge-risk">⚠ AT RISK</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:46%;background:linear-gradient(90deg,#ef4444,#f97316)"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2021</div><div>64</div><div>+9</div><div><span class="badge badge-falling">Falling</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:54%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2022</div><div>55</div><div>-9</div><div><span class="badge badge-rising">Rising</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:46%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2023</div><div>61</div><div>+6</div><div><span class="badge badge-stable">Stable</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:51%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data" style="background:rgba(239,68,68,0.05)">
+    <div>2024</div><div>67</div><div>+6</div><div><span class="badge badge-risk">⚠ AT RISK</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:56%;background:linear-gradient(90deg,#ef4444,#f97316)"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2025</div><div>75</div><div>+8</div><div><span class="badge badge-falling">Falling</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:63%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2026</div><div>62</div><div>-13</div><div><span class="badge badge-rising">Rising</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:52%"></div></div>
+  </div>
+  <div class="timeline-row timeline-data">
+    <div>2027</div><div>73</div><div>+11</div><div><span class="badge badge-falling">Falling</span></div>
+    <div class="rank-bar-bg"><div class="rank-bar" style="width:61%"></div></div>
+  </div>
+  <div style="margin-top:12px;font-size:0.75rem;color:#64748b;padding:0 16px">
+    ⚠ Red rows = years the early warning system correctly flagged AT RISK one year before the actual decline occurred (2020 → decline in 2021, 2024 → decline in 2025)
+  </div>
+</div>
+
+<script>
+function s(id, v) {
+  document.getElementById(id).value = v;
+  var el = document.getElementById('v_' + id);
+  if (!el) return;
+  if (id === 'career' || id === 'career_lag' || id === 'cont') {
+    el.textContent = parseFloat(v).toFixed(1) + '%';
+  } else if (id === 'sat' || id === 'sat_lag' || id === 'rq') {
+    el.textContent = parseFloat(v).toFixed(2);
+  } else if (id === 'ratio' || id === 'ratio_lag') {
+    el.textContent = parseFloat(v).toFixed(1);
+  } else {
+    el.textContent = v;
+  }
+}
+
+function loadUWE() {
+  s('sat',3.9); s('ratio',16.8); s('career',80); s('cont',90.2);
+  s('tariff',129); s('rq',2.8); s('lag',67); s('sat_lag',3.9);
+  s('ratio_lag',15.7); s('career_lag',80); s('avg',62);
+}
+
+function loadStrong() {
+  s('sat',4.2); s('ratio',10.5); s('career',93); s('cont',99);
+  s('tariff',210); s('rq',3.5); s('lag',1); s('sat_lag',4.2);
+  s('ratio_lag',10.5); s('career_lag',93); s('avg',1);
+}
+
+function loadWeak() {
+  s('sat',3.1); s('ratio',22); s('career',65); s('cont',82);
+  s('tariff',110); s('rq',2.2); s('lag',90); s('sat_lag',3.4);
+  s('ratio_lag',20); s('career_lag',68); s('avg',80);
+}
+
+function predict() {
+  var data = {
+    sat: parseFloat(document.getElementById('sat').value),
+    ratio: parseFloat(document.getElementById('ratio').value),
+    career: parseFloat(document.getElementById('career').value),
+    cont: parseFloat(document.getElementById('cont').value),
+    tariff: parseFloat(document.getElementById('tariff').value),
+    rq: parseFloat(document.getElementById('rq').value),
+    lag: parseFloat(document.getElementById('lag').value),
+    sat_lag: parseFloat(document.getElementById('sat_lag').value),
+    ratio_lag: parseFloat(document.getElementById('ratio_lag').value),
+    career_lag: parseFloat(document.getElementById('career_lag').value),
+    avg: parseFloat(document.getElementById('avg').value)
+  };
+
+  fetch('/predict', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('result-section').style.display = 'block';
+    document.getElementById('result-section').scrollIntoView({behavior:'smooth'});
+
+    var rankNum = parseInt(d.rank.split(' ')[0]);
+    document.getElementById('r_rank').textContent = rankNum;
+    document.getElementById('r_change').textContent = d.rank.split('(')[1]?.replace(')','') || '';
+    document.getElementById('r_prob').textContent = d.prob;
+    document.getElementById('r_threshold').textContent = d.at_risk ? 'ABOVE 25% ⚠' : 'BELOW 25% ✓';
+
+    var box = document.getElementById('warning-box');
+    if (d.at_risk) {
+      box.className = 'warning-box at-risk';
+      document.getElementById('w_icon').textContent = '⚠️';
+      document.getElementById('w_title').textContent = 'EARLY WARNING TRIGGERED — AT RISK';
+      document.getElementById('w_desc').textContent =
+        'This institution is predicted to experience a ranking decline next year. ' +
+        'At-risk probability ' + d.prob + ' exceeds the 25% detection threshold. ' +
+        'Key signals: satisfaction change, staff ratio trend, and 3-year average rank.';
+    } else {
+      box.className = 'warning-box stable';
+      document.getElementById('w_icon').textContent = '✅';
+      document.getElementById('w_title').textContent = 'NO WARNING — STABLE / IMPROVING';
+      document.getElementById('w_desc').textContent =
+        'This institution shows no significant risk of ranking decline. ' +
+        'At-risk probability ' + d.prob + ' is below the 25% detection threshold. ' +
+        'Current trajectory appears stable or improving.';
+    }
+
+    var sat = data.sat; var sat_lag = data.sat_lag;
+    var ratio = data.ratio; var ratio_lag = data.ratio_lag;
+    var career = data.career; var career_lag = data.career_lag;
+
+    var factors = [
+      {
+        name: 'Satisfaction change',
+        val: (sat - sat_lag).toFixed(2),
+        pct: Math.min(100, Math.abs(sat - sat_lag) / 0.5 * 100),
+        good: sat >= sat_lag,
+        desc: sat >= sat_lag ? 'Stable or improving' : 'Declining — risk signal'
+      },
+      {
+        name: 'Staff ratio change',
+        val: (ratio - ratio_lag).toFixed(1),
+        pct: Math.min(100, Math.abs(ratio - ratio_lag) / 3 * 100),
+        good: ratio <= ratio_lag,
+        desc: ratio <= ratio_lag ? 'Stable or improving' : 'Rising — risk signal'
+      },
+      {
+        name: 'Graduate prospects',
+        val: career.toFixed(1) + '%',
+        pct: Math.min(100, (career - 50) / 50 * 100),
+        good: career >= 75,
+        desc: career >= 75 ? 'Strong' : 'Weak — risk signal'
+      },
+      {
+        name: '3-year avg rank',
+        val: data.avg,
+        pct: Math.min(100, (130 - data.avg) / 130 * 100),
+        good: data.avg <= 60,
+        desc: data.avg <= 60 ? 'Top half historically' : 'Lower half — risk signal'
+      },
+      {
+        name: 'Entry standards',
+        val: data.tariff + ' pts',
+        pct: Math.min(100, (data.tariff - 80) / 220 * 100),
+        good: data.tariff >= 130,
+        desc: data.tariff >= 130 ? 'Competitive' : 'Below average'
+      },
+      {
+        name: 'Continuation rate',
+        val: data.cont.toFixed(1) + '%',
+        pct: Math.min(100, (data.cont - 50) / 50 * 100),
+        good: data.cont >= 85,
+        desc: data.cont >= 85 ? 'Strong retention' : 'Low retention — risk signal'
+      }
+    ];
+
+    var html = '';
+    factors.forEach(function(f) {
+      var color = f.good ? '#4ade80' : '#f87171';
+      html += '<div class="factor-card">' +
+        '<div class="factor-name">' + f.name + '</div>' +
+        '<div class="factor-bar-bg"><div class="factor-bar" style="width:' + f.pct + '%;background:' + color + '"></div></div>' +
+        '<div class="factor-val">' + f.val + '</div>' +
+        '<div class="hint">' + f.desc + '</div>' +
+        '</div>';
+    });
+    document.getElementById('explainer').innerHTML = html;
+  })
+  .catch(e => alert('Error: ' + e));
+}
+</script>
+</body>
+</html>

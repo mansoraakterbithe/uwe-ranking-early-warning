@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-bg: #f8f9fa;
+  --color-sidebar-bg: #0f172a;
+  --color-accent: #38bdf8;
+  --color-border: #e2e8f0;
+  --color-text-main: #1e293b;
+  --color-text-muted: #64748b;
+  --color-success: #10b981;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text-main font-sans antialiased overflow-hidden;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-white p-5 flex flex-col;
+  }
+
+  .section-label {
+    @apply text-[11px] font-bold text-text-muted uppercase tracking-wider mb-4;
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold text-sidebar-bg;
+  }
+
+  .stat-label {
+    @apply text-sm text-text-muted mb-1;
+  }
+
+  .recommendation-card {
+    @apply bg-white border border-border rounded-lg p-3 mb-3 hover:border-accent transition-colors;
+  }
+
+  .status-pill {
+    @apply bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded-full uppercase;
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    @apply bg-border gap-px;
+  }
+
+  @media (min-width: 1024px) {
+    .dashboard-grid {
+      grid-template-columns: 240px 1fr 280px;
+      height: calc(100vh - 120px); /* header(64) + footer(56) */
+    }
+  }
+
+
+  @media (min-width: 1024px) {
+    .dashboard-grid {
+      grid-template-columns: 240px 1fr;
+      height: calc(100vh - 120px);
+    }
+  }
+  @media (max-width: 1023px) {
+    .panel {
+      @apply border-b border-border;
+    }
+    
+    body {
+      @apply overflow-y-auto;
+    }
+    
+    .dashboard-grid {
+      height: auto !important;
+    }
+  }
+}
+

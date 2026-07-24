@@ -1,0 +1,17 @@
+{
+    "headline": "The best UK universities 2025 – rankings",
+    "standfirst": "Find a course at the university of your choice. Our league tables rank institutions by subject, looking at student satisfaction, staff numbers, spending and career prospects",
+    "institutions": [
+        { "institutionId": "0156", "name": "Oxford", "rank2025": 1, "rank2024": 2, "rank2023": 2, "guardianScore": 100, "percentSatisfiedWithTeaching": 94.3, "studentStaffRatio": 10.3, "careerProspects": 93, "valueAdded": 6.1, "averageEntryTariff": 203, "continuation": 98 },
+        { "institutionId": "0173", "name": "St Andrews", "rank2025": 2, "rank2024": 1, "rank2023": 1, "guardianScore": 98.6, "percentSatisfiedWithTeaching": 92.6, "studentStaffRatio": 11.9, "careerProspects": 91, "valueAdded": 6.4, "averageEntryTariff": 212, "continuation": 97.2 },
+        { "institutionId": "0114", "name": "Cambridge", "rank2025": 3, "rank2024": 3, "rank2023": 3, "guardianScore": 94.5, "percentSatisfiedWithTeaching": 85.0, "studentStaffRatio": 11.6, "careerProspects": 94, "valueAdded": 5.5, "averageEntryTariff": 208, "continuation": 99 },
+        { "institutionId": "0137", "name": "London School of Economics", "rank2025": 4, "rank2024": 4, "rank2023": 4, "guardianScore": 88.1, "percentSatisfiedWithTeaching": 87, "studentStaffRatio": 12.8, "careerProspects": 93, "valueAdded": 6.8, "averageEntryTariff": 192, "continuation": 96.6 },
+        { "institutionId": "0132", "name": "Imperial College", "rank2025": 5, "rank2024": 5, "rank2023": 5, "guardianScore": 82.6, "percentSatisfiedWithTeaching": 85.5, "studentStaffRatio": 11.9, "careerProspects": 96, "valueAdded": 6.6, "averageEntryTariff": 204, "continuation": 95.6 },
+        { "institutionId": "0116", "name": "Durham", "rank2025": 6, "rank2024": 7, "rank2023": 6, "guardianScore": 80.8, "percentSatisfiedWithTeaching": 87.9, "studentStaffRatio": 13.5, "careerProspects": 91, "valueAdded": 6.2, "averageEntryTariff": 185, "continuation": 97.5 },
+        { "institutionId": "0109", "name": "Bath", "rank2025": 7, "rank2024": 6, "rank2023": 7, "guardianScore": 79.5, "percentSatisfiedWithTeaching": 88, "studentStaffRatio": 15.3, "careerProspects": 92, "valueAdded": 6, "averageEntryTariff": 180, "continuation": 96.8 },
+        { "institutionId": "0163", "name": "Warwick", "rank2025": 8, "rank2024": 9, "rank2023": 8, "guardianScore": 75.2, "percentSatisfiedWithTeaching": 88.5, "studentStaffRatio": 13.9, "careerProspects": 89, "valueAdded": 4.1, "averageEntryTariff": 179, "continuation": 96.3 },
+        { "institutionId": "0149", "name": "UCL", "rank2025": 9, "rank2024": 8, "rank2023": 9, "guardianScore": 74.8, "percentSatisfiedWithTeaching": 84.2, "studentStaffRatio": 10.9, "careerProspects": 90, "valueAdded": 5.9, "averageEntryTariff": 183, "continuation": 96.4 },
+        { "institutionId": "0152", "name": "Loughborough", "rank2025": 10, "rank2024": 10, "rank2023": 10, "guardianScore": 74.6, "percentSatisfiedWithTeaching": 87.6, "studentStaffRatio": 14.1, "careerProspects": 89, "valueAdded": 5.5, "averageEntryTariff": 162, "continuation": 96.6 },
+        { "institutionId": "0081", "name": "UWE Bristol", "rank2025": 64, "rank2024": 43, "rank2023": 24, "guardianScore": 55.8, "percentSatisfiedWithTeaching": 83.2, "studentStaffRatio": 16.8, "careerProspects": 80, "valueAdded": 5.7, "averageEntryTariff": 129, "continuation": 90.2 }
+    ]
+}
